@@ -1,0 +1,10 @@
+{
+  "$schema": "https://www.schemastore.org/prettierrc.json",
+  "semi": true,
+  "singleQuote": true,
+  "singleAttributePerLine": false,
+  "htmlWhitespaceSensitivity": "css",
+  "printWidth": 120,
+  "plugins": ["prettier-plugin-organize-imports"],
+  "tabWidth": 2
+}
