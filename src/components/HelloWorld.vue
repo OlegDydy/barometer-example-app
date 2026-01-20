@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, useTemplateRef, watchEffect } from 'vue';
+import { invert, ndarray, type Vec2Like } from '../utils/linearMath';
 
 const canvas = useTemplateRef('canvas');
 const ctx = computed(() => canvas.value?.getContext('2d') || null);
@@ -7,11 +8,7 @@ const ctx = computed(() => canvas.value?.getContext('2d') || null);
 const controlPoints = reactive([0, 1, 2, 3]);
 const size = 4;
 
-type Vector2Like = [x: number, y: number];
-
-function lagrange() {
-  
-}
+function lagrange() {}
 
 const SEGMENTS = 128;
 function ellipse(rx: number, ry = 1): number {
@@ -45,15 +42,15 @@ function approx(a: number, b = 1, chain = [1, 1]): number {
 function fix(x: number) {
   if (x > 2) return 0;
 
-  return 4*((0.006600646426239134 * x - 0.04658177262052619) * x + 0.1111427211658603) * x;
+  return 4 * ((0.006600646426239134 * x - 0.04658177262052619) * x + 0.1111427211658603) * x;
 }
 
 const ticks = 128;
-const xRange: Vector2Like = [0, 10];
+const xRange: Vec2Like = [0, 10];
 const colors = ['#f00', '#ff0', '#0f0', '#0ff', '#00f', '#f0f'];
 const refresh = ref(0);
 
-function updateRange(range: Vector2Like, value): Vector2Like {
+function updateRange(range: Vec2Like, value): Vec2Like {
   if (value < range[0]) range[0] = value;
   if (value > range[1]) range[1] = value;
   return range;
@@ -63,7 +60,7 @@ function plot(ctx: CanvasRenderingContext2D) {
   refresh.value;
 
   const values: [number[], number[]] = [[], []];
-  const yRange: Vector2Like = [+Infinity, -Infinity];
+  const yRange: Vec2Like = [+Infinity, -Infinity];
   for (let i = 0; i <= ticks; ++i) {
     const x = xRange[0] + (xRange[1] - xRange[0]) * (i / ticks);
 
@@ -126,10 +123,17 @@ watchEffect(() => {
 function invalidate() {
   refresh.value++;
 }
+
+function test() {
+  const arr = ndarray([3, 3] as Vec2Like, [7,8,10,1,2,3,4,5,6]);
+  ndarray.print(arr);
+  ndarray.print(invert(arr));
+}
 </script>
 
 <template>
   <button @click="invalidate">render</button>
+  <button @click="test">Test</button>
   <canvas ref="canvas" width="1280" height="720"></canvas>
 </template>
 
