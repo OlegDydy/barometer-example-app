@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import Barometer from './components/Barometer.vue'
 </script>
 
 <template>
-  <HelloWorld msg="Vite + Vue" />
+  <Barometer />
 </template>
 
 <style scoped>
