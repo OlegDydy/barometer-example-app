@@ -1,35 +1,79 @@
 <script setup lang="ts">
-import { Cog, Sun } from 'lucide-vue-next';
+import { Cog } from 'lucide-vue-next';
+import { computed, ref, shallowRef } from 'vue';
+import { OpenWeatherMap, type OWMResponse } from '../services/OpenWeatherMap';
+import { settingsStore } from '../store/settingsStore';
+import { strftime } from '../utils/formatTime';
+import BarsWidget from './BarsWidget.vue';
+import Settings from './Settings.vue';
+import SunWidget from './SunWidget.vue';
+import WidgetNow from './WidgetNow.vue';
+import WindWidget from './WindWidget.vue';
 
-/*
-+--------+----------+
-|        |   temp   |
-|  now   | pressure |
-|        | humidity |
-+--------+----------+
-|  sun   |   wind   |
-+--------+----------+
-*/
+const settingsOpen = ref(false);
+const data = shallowRef<null | OWMResponse>(null);
+
+const dataSource = new OpenWeatherMap('', { name: 'Saransk', lat: settingsStore.lat, lon: settingsStore.lon });
+
+function extractData<R extends 'minutely' | 'hourly' | 'daily'>(
+  data: OWMResponse | undefined | null,
+  range: R,
+  attr: keyof OWMResponse[R][0],
+) {
+  if (!data) return undefined;
+
+  let max = -Infinity;
+  let min = Infinity;
+  const result = data[range].map((item, i) => {
+    const value = item[attr as keyof typeof item];
+    if (value > max) max = value;
+    if (value < min) min = value;
+    return {
+      value: value,
+      percent: 0,
+      label: i % 4 == 0 ? strftime('%H:%M', new Date(item.dt * 1000)) : undefined,
+    };
+  });
+  const delta = max - min;
+  for (const i of result) {
+    i.percent = (i.value - min) / delta;
+  }
+  return result;
+}
+
+const tempData = computed(() => extractData(data.value, 'hourly', 'temp'));
+const pressureData = computed(() => extractData(data.value, 'hourly', 'pressure'));
+const humidityData = computed(() => extractData(data.value, 'hourly', 'humidity'));
+
+async function updateData() {
+  data.value = await dataSource.fetch({ lang: 'ru' });
+}
+updateData();
+
+function openSettings() {
+  settingsOpen.value = true;
+}
 </script>
 
 <template>
-  <main class="card">
+  <main>
     <header class="header">
-      <button class="actions _icon" title="Settings"><Cog /></button>
-      <h1 class="center">Barometer</h1>
+      <button class="actions _icon" title="Settings" @click="openSettings">
+        <i class="icon"><Cog /></i>
+      </button>
+      <h1 class="center">Барометер</h1>
     </header>
     <hr />
     <div class="table">
-      <div data-slot="now">
-        <Sun />
-      </div>
-      <div class="content" data-slot="temp"><span>Temperature graph</span></div>
-      <div class="content" data-slot="pressure"><span>Pressure graph</span></div>
-      <div class="content" data-slot="humidity"><span>Humidity graph</span></div>
-      <div class="info" data-slot="sun"><span>Info About Sun</span></div>
-      <div class="info" data-slot="wind"><span>Info About Wind</span></div>
+      <WidgetNow :report="data" />
+      <BarsWidget name="temp" :bar-data="tempData"><span>Температура</span></BarsWidget>
+      <BarsWidget name="pressure" :bar-data="pressureData"><span>Давление</span></BarsWidget>
+      <BarsWidget name="humidity" :bar-data="humidityData"><span>Влажность</span></BarsWidget>
+      <SunWidget :current="data?.current" :day="data?.daily[0]" />
+      <WindWidget :current="data?.current" />
     </div>
   </main>
+  <Settings v-model:open="settingsOpen" />
 </template>
 
 <style lang="scss" scoped>
@@ -38,19 +82,6 @@ import { Cog, Sun } from 'lucide-vue-next';
   gap: 0.5rem;
   grid-template-columns: 1fr 1fr;
   width: 64rem;
-
-  & > * {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    background: oklab(from currentcolor l a b / 0.1);
-    border-radius: 0.5rem;
-  }
-
-  & > [data-slot='now'] {
-    grid-row: span 3;
-  }
 }
 
 .header {
@@ -62,24 +93,7 @@ import { Cog, Sun } from 'lucide-vue-next';
   }
 }
 
-._icon {
-  padding: 0.5rem;
-  font-size: 1rem;
-  position: absolute;
-  right: 0;
-
-  & > svg {
-    display: block;
-  }
-}
-
-.content {
-  height: 8rem;
-  padding: 0.25rem 0.5rem;
-}
-
 .info {
   padding: 0.5rem;
 }
-
 </style>

@@ -1,25 +1,32 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  --font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --line-height: 1.2;
+  --font-weight: 400;
+  --font-size: 16px;
+  --font: var(--font-weight) var(--font-size) / var(--line-height) var(--font-family);
 
+  --color: oklch(100% 0 271.152);
+  --muted: oklch(from var(--color) l c h / 0.5);
+  --border: oklch(from var(--color) calc((l - 0.5) * 0.25 + 0.5) c h);
+  --bg-color: oklch(26.033% 0 271.152);
+  --primary: oklch(60.698% 0.21466 275.613deg);
+
+  font: var(--font);
+  color: var(--color);
+  background-color: var(--bg-color);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--primary);
   text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+
+  &:hover {
+    color: oklch(from var(--primary) calc(l - 5) c h);
+  }
 }
 
 body {
@@ -30,12 +37,44 @@ body {
   min-height: 100vh;
 }
 
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin-top: 0;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
 h1 {
-  font-size: 3.2em;
+  font-size: 3rem;
   line-height: 1.1;
 }
 
-button {
+:is(h1, h2, h3, h4, h5, h6, p):first-child {
+  margin-top: 0;
+}
+
+._indifferent {
+  background-image: linear-gradient(-80deg, #0000 40%, rgb(from var(--color) r g b / 25%), #0000 60%);
+  background-size: 200%;
+  animation: loading 2s linear infinite;
+}
+
+@keyframes loading {
+  from {
+    background-position-x: 200%;
+  }
+  to {
+    background-position-x: 0%;
+  }
+}
+
+:is(button, .btn) {
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
@@ -45,17 +84,111 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+
+  &:hover {
+    border-color: oklch(from var(--primary) calc(l - 0.05) c h);
+  }
+  &:focus,
+  &:focus-visible {
+    outline: 4px auto -webkit-focus-ring-color;
+  }
+  &._small {
+    font-size: 0.75em;
+  }
+  &._icon {
+    padding: 0.5rem;
+    position: absolute;
+    right: 0;
+    line-height: 1;
+
+    & > .icon {
+      display: block;
+    }
+  }
 }
 
 .card {
-  padding: 2em;
+  background-color: oklab(from currentcolor l a b / 0.1);
+  border-radius: 0.5rem;
+}
+
+.entry {
+  margin-bottom: 1rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  & > label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+  }
+}
+
+/* focusable */
+:is(input, textarea, select, .input, button, .btn, [tabindex], .focusable) {
+  --focus: oklch(from var(--primary) l c h / 50%);
+  transition: all 0.2s ease-in-out;
+  transition-property: box-shadow, border, color;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 0.25rem var(--focus);
+    border-color: var(--primary);
+  }
+
+  &:is(:disabled, [aria-disabled='true']) {
+    --color: var(--muted);
+    cursor: not-allowed;
+  }
+}
+
+:is(input, textarea, select, .input) {
+  appearance: none;
+  padding: 0.5rem 0.75rem;
+  font: var(--font);
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+}
+
+input[type='number'] {
+  padding: 0 0 0 0.75rem;
+}
+
+.entry-combined {
+  display: inline-flex;
+  position: relative;
+
+  & > :is(label, .slug) {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+  }
+
+  & > :is(input, textarea, select, .input, button, .btn, label, .slug) {
+    /* trick to keep box-shadow rounded */
+    border-radius: 0.01px;
+    margin-right: -1px;
+
+    &:first-child {
+      border-top-left-radius: 0.25rem;
+      border-bottom-left-radius: 0.25rem;
+    }
+
+    &:last-child {
+      margin-right: 0;
+      border-top-right-radius: 0.25rem;
+      border-bottom-right-radius: 0.25rem;
+    }
+
+    &:focus,
+    &:focus-visible {
+      z-index: 1;
+    }
+  }
 }
 
 #app {
@@ -65,15 +198,30 @@ button:focus-visible {
   text-align: center;
 }
 
+.icon{
+  font-style: normal;
+ & svg {
+  display: inline-block;
+  height: 1em;
+  width: auto;
+}}
+
+/* Utils */
+.text-center {
+  text-align: center;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    --color: #213547;
+    --bg-color: #ffffff;
   }
+
   a:hover {
     color: #747bff;
   }
-  button {
+
+  :is(button, .btn) {
     background-color: #f9f9f9;
   }
 }
