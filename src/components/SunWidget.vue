@@ -1,22 +1,22 @@
 <script setup lang="ts">
 import { Sun, Sunrise, Sunset } from 'lucide-vue-next';
-import type { OWMCurrent, OWMDaily } from '../services/OpenWeatherMap';
+import type { OpenWeatherMap } from '../services/OpenWeatherMap';
 import { strftime } from '../utils/formatTime';
 
-const { current, day } = defineProps<{ current?: OWMCurrent; day?: OWMDaily }>();
+defineProps<{ source: OpenWeatherMap }>();
 </script>
 
 <template>
-  <div data-slot="sun" class="sun card" :class="{ _indifferent: !current }">
-    <template v-if="current && day">
+  <div class="sun card" :class="{ loading: !source.loaded }">
+    <template v-if="source.loaded">
       <p>Солнце</p>
       <div class="sun__params">
         <span
-          ><i class="icon" title="Ультрафиолетовый индекс"><Sun /><sub>UV</sub></i> {{ current.uvi }}</span
+          ><i class="icon" title="Ультрафиолетовый индекс"><Sun /><sub>UV</sub></i> {{ source.current.uvi }}</span
         ><span
-          ><i class="icon" title="Восход"><Sunrise /></i> {{ strftime('%H:%M', day.sunrise * 1000) }}</span
+          ><i class="icon" title="Восход"><Sunrise /></i> {{ strftime('%H:%M', source.current.sunrise * 1000) }}</span
         ><span
-          ><i class="icon" title="Заход"><Sunset /></i> {{ strftime('%H:%M', day.sunset * 1000) }}</span
+          ><i class="icon" title="Заход"><Sunset /></i> {{ strftime('%H:%M', source.current.sunset * 1000) }}</span
         >
       </div>
     </template>

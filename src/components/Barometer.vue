@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { Cog } from 'lucide-vue-next';
-import { computed, ref, shallowRef } from 'vue';
-import { OpenWeatherMap, type OWMResponse } from '../services/OpenWeatherMap';
+import { Cog, RotateCw } from 'lucide-vue-next';
+import { computed, ref, watch, watchEffect } from 'vue';
+import { OWMUnits } from '../consts/openWeatherConsts';
+import { OpenWeatherMap } from '../services/OpenWeatherMap';
 import { settingsStore } from '../store/settingsStore';
+import type { OWMHourly } from '../types/openWeatherMap';
 import { strftime } from '../utils/formatTime';
 import BarsWidget from './BarsWidget.vue';
 import Settings from './Settings.vue';
@@ -10,45 +12,49 @@ import SunWidget from './SunWidget.vue';
 import WidgetNow from './WidgetNow.vue';
 import WindWidget from './WindWidget.vue';
 
+const HOUR = 3_600_000;
+
 const settingsOpen = ref(false);
-const data = shallowRef<null | OWMResponse>(null);
 
-const dataSource = new OpenWeatherMap('', { name: 'Saransk', lat: settingsStore.lat, lon: settingsStore.lon });
+const weather = new OpenWeatherMap(
+  () => settingsStore.value.apiKey,
+  () => settingsStore.value.location,
+);
 
-function extractData<R extends 'minutely' | 'hourly' | 'daily'>(
-  data: OWMResponse | undefined | null,
-  range: R,
-  attr: keyof OWMResponse[R][0],
-) {
+function extractData(data: OWMHourly[] | null | undefined, attr: keyof OWMHourly) {
   if (!data) return undefined;
 
-  let max = -Infinity;
-  let min = Infinity;
-  const result = data[range].map((item, i) => {
+  const result = data.map((item, i) => {
     const value = item[attr as keyof typeof item];
-    if (value > max) max = value;
-    if (value < min) min = value;
+    if (typeof value != 'number') throw new Error('Not a numeric data row');
+
     return {
       value: value,
-      percent: 0,
       label: i % 4 == 0 ? strftime('%H:%M', new Date(item.dt * 1000)) : undefined,
     };
   });
-  const delta = max - min;
-  for (const i of result) {
-    i.percent = (i.value - min) / delta;
-  }
   return result;
 }
 
-const tempData = computed(() => extractData(data.value, 'hourly', 'temp'));
-const pressureData = computed(() => extractData(data.value, 'hourly', 'pressure'));
-const humidityData = computed(() => extractData(data.value, 'hourly', 'humidity'));
+const tempData = computed(() => extractData(weather.loaded ? weather.hourly : null, 'temp'));
+const pressureData = computed(() => extractData(weather.loaded ? weather.hourly : null, 'pressure'));
+const humidityData = computed(() => extractData(weather.loaded ? weather.hourly : null, 'humidity'));
 
-async function updateData() {
-  data.value = await dataSource.fetch({ lang: 'ru' });
+function updateData() {
+  weather.refresh();
 }
+watch(
+  () => [settingsStore.value.apiKey, settingsStore.value.location.lat, settingsStore.value.location.lon],
+  updateData,
+);
 updateData();
+
+watchEffect((onCleanup) => {
+  const refreshInterval = setInterval(updateData, settingsStore.value.updatePeriod * HOUR);
+  onCleanup(() => {
+    clearInterval(refreshInterval);
+  });
+});
 
 function openSettings() {
   settingsOpen.value = true;
@@ -58,19 +64,24 @@ function openSettings() {
 <template>
   <main>
     <header class="header">
-      <button class="actions _icon" title="Settings" @click="openSettings">
-        <i class="icon"><Cog /></i>
+      <button class="float-left _icon" title="Обновить данные" @click="updateData">
+        <RotateCw />
       </button>
-      <h1 class="center">Барометер</h1>
+      <button class="float-right _icon" title="Настройки" @click="openSettings">
+        <Cog />
+      </button>
+      <h1 class="center">Барометр</h1>
     </header>
     <hr />
     <div class="table">
-      <WidgetNow :report="data" />
-      <BarsWidget name="temp" :bar-data="tempData"><span>Температура</span></BarsWidget>
-      <BarsWidget name="pressure" :bar-data="pressureData"><span>Давление</span></BarsWidget>
-      <BarsWidget name="humidity" :bar-data="humidityData"><span>Влажность</span></BarsWidget>
-      <SunWidget :current="data?.current" :day="data?.daily[0]" />
-      <WindWidget :current="data?.current" />
+      <WidgetNow :source="weather" />
+      <BarsWidget name="temp" :bar-data="tempData"
+        ><span>Температура ({{ OWMUnits[weather.units].temp }})</span></BarsWidget
+      >
+      <BarsWidget name="pressure" :bar-data="pressureData"><span>Давление (кПа)</span></BarsWidget>
+      <BarsWidget name="humidity" :bar-data="humidityData"><span>Влажность (%)</span></BarsWidget>
+      <SunWidget :source="weather" />
+      <WindWidget :source="weather" />
     </div>
   </main>
   <Settings v-model:open="settingsOpen" />
@@ -86,11 +97,15 @@ function openSettings() {
 
 .header {
   position: relative;
+}
+.float-left {
+  position: absolute;
+  left: 0;
+}
 
-  & > .actions {
-    position: absolute;
-    right: 0;
-  }
+.float-right {
+  position: absolute;
+  right: 0;
 }
 
 .info {

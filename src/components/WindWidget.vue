@@ -1,49 +1,33 @@
 <script setup lang="ts">
 import { Navigation2, Wind, WindArrowDown } from 'lucide-vue-next';
 import { computed } from 'vue';
-import { OWMUnits, type OWMCurrent } from '../services/OpenWeatherMap';
+import { OWMUnits } from '../consts/openWeatherConsts';
+import { windDirections as dir } from '../consts/windDirections';
+import { OpenWeatherMap } from '../services/OpenWeatherMap';
 
-const { current } = defineProps<{ current?: OWMCurrent }>();
+const { source } = defineProps<{ source: OpenWeatherMap }>();
 
-const turns = [
-  { abbr: 'В', name: 'Восток' },
-  { abbr: 'ВСВ', name: 'Востоко-Северо-Восток' },
-  { abbr: 'СВ', name: 'Северо-Восток' },
-  { abbr: 'ССВ', name: 'Северо-Северо-Восток' },
-  { abbr: 'С', name: 'Север' },
-  { abbr: 'ССЗ', name: 'Северо-Северо-Запад' },
-  { abbr: 'СЗ', name: 'Северо-Запад' },
-  { abbr: 'ЗСЗ', name: 'Западо-Северо-Запад' },
-  { abbr: 'З', name: 'Запад' },
-  { abbr: 'ЗЮЗ', name: 'Западо-Юго-Запад' },
-  { abbr: 'ЮЗ', name: 'Юго-Запад' },
-  { abbr: 'ЮЮЗ', name: 'Юго-Юго-Запад' },
-  { abbr: 'Ю', name: 'Юг' },
-  { abbr: 'ЮЮВ', name: 'Юго-Юго-Восток' },
-  { abbr: 'ЮВ', name: 'Юго-Восток' },
-  { abbr: 'ВЮВ', name: 'Востоко-Юго-Восток' },
-];
-
-const direction = computed(() => Math.round(((current?.wind_deg || 0) * turns.length) / 360));
+const direction = computed(() => (source.loaded ? Math.round((source.current.wind_deg * dir.length) / 360) : 0));
 </script>
 
 <template>
-  <div data-slot="wind" class="wind card" :class="{ _indifferent: !current }">
-    <template v-if="current">
+  <div class="wind card" :class="{ loading: !source.loaded }">
+    <template v-if="source.loaded">
       <p>Ветер</p>
       <div class="wind__params">
         <span
-          ><i class="icon" title="Ветер"><Wind /></i> {{ current.wind_speed }} {{ OWMUnits.standard.speed }}</span
+          ><i class="icon" title="Ветер"><Wind /></i> {{ source.current.wind_speed }}
+          {{ OWMUnits[source.units].speed }}</span
         >
         <span
           ><i class="icon" title="Направление ветра"
-            ><Navigation2 :style="{ transform: `rotate(${0.75 - direction / turns.length}turn)` }" /></i
-          >{{ ' ' }}<abbr :title="turns[direction]?.name">{{ turns[direction]?.abbr }}</abbr> ({{
-            current.wind_deg
+            ><Navigation2 :style="{ transform: `rotate(${0.75 - direction / dir.length}turn)` }" /></i
+          >{{ ' ' }}<abbr :title="dir[direction]?.name">{{ dir[direction]?.abbr }}</abbr> ({{
+            source.current.wind_deg
           }}°)</span
         >
         <span class="icon" title="Порывы"
-          ><WindArrowDown /><i></i> порывы до {{ current.wind_gust }}{{ OWMUnits.standard.speed }}</span
+          ><WindArrowDown /><i></i> порывы до {{ source.current.wind_gust }} {{ OWMUnits[source.units].speed }}</span
         >
       </div>
     </template>

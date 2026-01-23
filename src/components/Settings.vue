@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { X } from 'lucide-vue-next';
 import { reactive, useTemplateRef, watchPostEffect } from 'vue';
-import { HOUR, settingsStore } from '../store/settingsStore';
+import { settingsStore } from '../store/settingsStore';
 import { clamp } from '../utils/clamp';
 
 const open = defineModel('open', { type: Boolean, default: false });
 const dialog = useTemplateRef('dialog');
 
-const state = reactive({ ...settingsStore, location: { ...settingsStore.location } });
-state.updatePeriod /= HOUR;
+const state = reactive({ ...settingsStore.value, location: { ...settingsStore.value.location } });
 
 const supportsDialog = 'HTMLDialogElement' in globalThis;
 watchPostEffect(() => {
@@ -30,9 +29,11 @@ watchPostEffect(() => {
 });
 
 function save() {
-  settingsStore.apiKey = state.apiKey;
-  settingsStore.updatePeriod = clamp(state.updatePeriod | 0, 1, 24) * HOUR;
-  settingsStore.location = { ...state.location };
+  const store = settingsStore.value;
+
+  store.apiKey = state.apiKey;
+  store.updatePeriod = clamp(state.updatePeriod | 0, 1, 24);
+  store.location = { ...state.location };
 }
 
 function close(e: Event) {
@@ -45,9 +46,11 @@ function close(e: Event) {
   <Transition>
     <dialog v-if="open" ref="dialog" closedby="any" @cancel="close">
       <button class="close _icon _small" @click="close">
-        <i class="icon"><X /></i>
+        <X />
       </button>
+
       <h2 style="margin-top: 1rem">Настройки</h2>
+
       <div class="entry">
         <label for="apiKey">API ключ</label>
         <input
@@ -56,7 +59,7 @@ function close(e: Event) {
           type="text"
           v-model="state.apiKey"
           size="30"
-          placeholder="Paste here your OpenWeatherMap API KEY"
+          placeholder="Вставьте свой OpenWeatherMap API ключ"
         />
       </div>
 

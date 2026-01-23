@@ -18,15 +18,6 @@ const short = new Intl.DateTimeFormat('ru', {
   timeZoneName: 'short',
 });
 
-export function formatTime(ts: Date | number | string) {
-  if (typeof ts == 'number' || typeof ts == 'string') {
-    ts = new Date(ts);
-  }
-  // const hours = ts.getHours().toString().padStart(2, '0');
-  // const minutes = ts.getMinutes().toString().padStart(2, '0');
-  return long.format(ts);
-}
-
 export function strftime(format: string, time: Date | number | string) {
   if (typeof time == 'number' || typeof time == 'string') {
     time = new Date(time);
