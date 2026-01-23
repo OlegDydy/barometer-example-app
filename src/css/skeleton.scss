@@ -1,0 +1,14 @@
+.loading {
+  background-image: linear-gradient(-80deg, #0000 40%, rgb(from var(--color) r g b / 25%), #0000 60%);
+  background-size: 200%;
+  animation: loading 2s linear infinite;
+}
+
+@keyframes loading {
+  from {
+    background-position-x: 200%;
+  }
+  to {
+    background-position-x: 0%;
+  }
+}

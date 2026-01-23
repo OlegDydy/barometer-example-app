@@ -1,0 +1,46 @@
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.card {
+  background-color: oklab(from currentcolor l a b / 0.1);
+  border-radius: 0.5rem;
+}
+
+.icon {
+  font-style: normal;
+
+  & svg {
+    display: inline-block;
+    height: 1em;
+    width: auto;
+  }
+}
+
+a {
+  font-weight: 500;
+  color: var(--primary);
+  text-decoration: inherit;
+
+  &:hover {
+    color: oklch(from var(--primary) calc(l - 5) c h);
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --color: #213547;
+    --bg-color: #ffffff;
+  }
+}

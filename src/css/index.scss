@@ -1,0 +1,41 @@
+@use './interactive.scss';
+@use './typography.scss';
+@use './skeleton.scss';
+@use './structure.scss';
+@use './utils.scss';
+
+:root {
+  color-scheme: light dark;
+  --font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --line-height: 1.2;
+  --font-weight: 400;
+  --font-size: 16px;
+  --font: var(--font-weight) var(--font-size) / var(--line-height) var(--font-family);
+
+  --color: oklch(100% 0 271.152);
+  --muted: oklch(from var(--color) l c h / 0.5);
+  --border: oklch(from var(--color) calc((l - 0.5) * 0.25 + 0.5) c h);
+  --bg-color: oklch(26.033% 0 271.152);
+  --primary: oklch(60.698% 0.21466 275.613deg);
+
+  font: var(--font);
+  color: var(--color);
+  background-color: var(--bg-color);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --color: #213547;
+    --bg-color: #ffffff;
+  }
+
+  a:hover {
+    color: #747bff;
+  }
+
+  :is(button, .btn) {
+    background-color: #f9f9f9;
+  }
+}

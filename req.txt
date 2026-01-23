@@ -1,0 +1,13 @@
+curl 'https://api.openweathermap.org/data/3.0/onecall?lang=ru&lat=54.1838&lon=45.1749&exclude=minutely&appid=5796abbde9106b7da4febfae8c44c232' \
+  -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:146.0) Gecko/20100101 Firefox/146.0' \
+  -H 'Accept: */*' \
+  -H 'Accept-Language: ru,en-US;q=0.5' \
+  -H 'Accept-Encoding: gzip, deflate, br, zstd' \
+  -H 'Referer: https://openweathermap.org/' \
+  -H 'Origin: https://openweathermap.org' \
+  -H 'Sec-GPC: 1' \
+  -H 'Connection: keep-alive' \
+  -H 'Sec-Fetch-Dest: empty' \
+  -H 'Sec-Fetch-Mode: cors' \
+  -H 'Sec-Fetch-Site: same-site' \
+  -H 'Priority: u=4'
