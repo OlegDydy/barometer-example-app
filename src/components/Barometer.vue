@@ -75,11 +75,11 @@ function openSettings() {
     <hr />
     <div class="table">
       <WidgetNow :source="weather" />
-      <BarsWidget name="temp" :bar-data="tempData"
+      <BarsWidget name="temp" :bar-data="tempData" :suffix="OWMUnits[weather.units].temp"
         ><span>Температура ({{ OWMUnits[weather.units].temp }})</span></BarsWidget
       >
-      <BarsWidget name="pressure" :bar-data="pressureData"><span>Давление (кПа)</span></BarsWidget>
-      <BarsWidget name="humidity" :bar-data="humidityData"><span>Влажность (%)</span></BarsWidget>
+      <BarsWidget name="pressure" :bar-data="pressureData" suffix=" кПа"><span>Давление (кПа)</span></BarsWidget>
+      <BarsWidget name="humidity" :bar-data="humidityData" suffix="%"><span>Влажность (%)</span></BarsWidget>
       <SunWidget :source="weather" />
       <WindWidget :source="weather" />
     </div>

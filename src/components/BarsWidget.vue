@@ -3,9 +3,9 @@ import { computed } from 'vue';
 
 type PlotDataItem = { value: number; label?: string };
 
-const { barData } = defineProps<{ barData?: PlotDataItem[] }>();
+const { barData } = defineProps<{ barData?: PlotDataItem[]; suffix?: string }>();
 
-function limits(dataset: PlotDataItem[]): [min: number, max: number] {
+function bounds(dataset: PlotDataItem[]): [min: number, max: number] {
   let max = -Infinity;
   let min = Infinity;
   for (const item of dataset) {
@@ -42,10 +42,9 @@ function selectStepSize(min: number, max: number) {
 const displayData = computed(() => {
   if (!barData) return { labels: ['', '0', ''], values: [] };
 
-  // Find limits
-  let [min, max] = limits(barData);
+  // Find bounds
+  let [min, max] = bounds(barData);
   const step = selectStepSize(min, max);
-  const ticks = Math.round((max - min) / step);
 
   // Adjust borders according to step size
   min = Math.floor(min / step) * step;
@@ -55,6 +54,7 @@ const displayData = computed(() => {
   const values = barData.map(({ value, label }) => ({ value, percent: size > 0 ? (value - min) / size : 0.5, label }));
   const labels: string[] = [];
 
+  const ticks = Math.round((max - min) / step);
   for (let i = ticks + 1; i--; ) {
     let value = min + step * i;
     value = Math.round(value * 10) / 10;
@@ -73,8 +73,15 @@ const displayData = computed(() => {
         <div class="plot__labels">
           <span v-for="(label, id) in displayData.labels" :key="id">{{ label }}</span>
         </div>
-        <div v-for="(bar, id) in displayData.values" :key="id" :style="`height: ${bar.percent * 100}% `">
-          <span v-if="bar.label">{{ bar.label }}</span>
+        <div class="plot__data">
+          <div
+            v-for="(bar, id) in displayData.values"
+            :key="id"
+            :style="`height: ${bar.percent * 100}% `"
+            :title="`${bar.value}${suffix || ''}`"
+          >
+            <span v-if="bar.label">{{ bar.label }}</span>
+          </div>
         </div>
       </div>
     </template>
@@ -90,58 +97,60 @@ const displayData = computed(() => {
 }
 
 .plot {
+  --labels-height: 1.2em;
   width: 100%;
   max-width: 32rem;
   flex: 1;
-  overflow-y: auto;
   display: flex;
   gap: 0.25rem;
-  align-items: end;
-  padding-bottom: 1.2em;
+  padding-bottom: var(--labels-height);
 
-  & > :not(.plot__labels) {
-    position: relative;
-    border-radius: 0.25rem;
-    background-color: var(--primary);
-    width: 1rem;
-    flex: 0 0 0.75rem;
+  &__data {
+    overflow-x: auto;
+    display: flex;
+    flex: 1;
+    align-items: end;
+    gap: 0.25rem;
+    margin-bottom: calc(0px - var(--labels-height));
+    padding-bottom: var(--labels-height);
 
-    & > span {
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      height: 0;
-      white-space: nowrap;
+    & > :not(.plot__labels) {
+      position: relative;
+      border-radius: 0.25rem;
+      background-color: var(--primary);
+      width: 1rem;
+      flex: 0 0 0.75rem;
+      min-height: 1px;
+
+      & > span {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 0;
+        white-space: nowrap;
+      }
     }
   }
-}
 
-.plot__labels {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
-  text-align: right;
-  font-size: 0.75rem;
-  color: var(--muted);
-  white-space: nowrap;
-  position: sticky;
-  left: 0;
-  z-index: 1;
+  &__labels {
+    display: flex;
+    margin: -0.5em 0;
+    flex-direction: column;
+    justify-content: space-between;
+    align-self: stretch;
+    text-align: right;
+    font-size: 0.75rem;
+    line-height: 1;
+    color: var(--muted);
+    white-space: nowrap;
+    position: sticky;
+    left: 0;
+    z-index: 1;
 
-  & > *::after {
-    content: ' -';
-    display: inline-block;
-  }
-
-  & > :first-child::after {
-    color: transparent;
-    border-top: 1px solid var(--muted);
-  }
-
-  & > :last-child::after {
-    color: transparent;
-    border-bottom: 1px solid var(--muted);
+    & > *::after {
+      content: ' –';
+      display: inline-block;
+    }
   }
 }
 </style>
