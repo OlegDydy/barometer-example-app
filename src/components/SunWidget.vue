@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Sun, Sunrise, Sunset } from 'lucide-vue-next';
-import type { OpenWeatherMap } from '../services/OpenWeatherMap';
+import type { IDataSource } from '../services/IDataSource';
 import { strftime } from '../utils/formatTime';
 
-defineProps<{ source: OpenWeatherMap }>();
+defineProps<{ source: IDataSource }>();
 </script>
 
 <template>
@@ -14,9 +14,9 @@ defineProps<{ source: OpenWeatherMap }>();
         <span
           ><i class="icon" title="Ультрафиолетовый индекс"><Sun /><sub>UV</sub></i> {{ source.current.uvi }}</span
         ><span
-          ><i class="icon" title="Восход"><Sunrise /></i> {{ strftime('%H:%M', source.current.sunrise * 1000) }}</span
+          ><i class="icon" title="Восход"><Sunrise /></i> {{ strftime('%H:%M', source.current.sunrise) }}</span
         ><span
-          ><i class="icon" title="Заход"><Sunset /></i> {{ strftime('%H:%M', source.current.sunset * 1000) }}</span
+          ><i class="icon" title="Заход"><Sunset /></i> {{ strftime('%H:%M', source.current.sunset) }}</span
         >
       </div>
     </template>

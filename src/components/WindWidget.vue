@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { Navigation2, Wind, WindArrowDown } from 'lucide-vue-next';
 import { computed } from 'vue';
-import { OWMUnits } from '../consts/openWeatherConsts';
+import { AppUnits } from '../consts/weatherConsts';
 import { windDirections as dir } from '../consts/windDirections';
-import { OpenWeatherMap } from '../services/OpenWeatherMap';
+import type { IDataSource } from '../services/IDataSource';
 
-const { source } = defineProps<{ source: OpenWeatherMap }>();
+const { source } = defineProps<{ source: IDataSource }>();
 
 const direction = computed(() => (source.loaded ? Math.round((source.current.wind_deg * dir.length) / 360) : 0));
 </script>
@@ -17,7 +17,7 @@ const direction = computed(() => (source.loaded ? Math.round((source.current.win
       <div class="wind__params">
         <span
           ><i class="icon" title="Ветер"><Wind /></i> {{ source.current.wind_speed }}
-          {{ OWMUnits[source.units].speed }}</span
+          {{ AppUnits[source.units].speed }}</span
         >
         <span
           ><i class="icon" title="Направление ветра"
@@ -27,7 +27,7 @@ const direction = computed(() => (source.loaded ? Math.round((source.current.win
           }}°)</span
         >
         <span class="icon" title="Порывы"
-          ><WindArrowDown /><i></i> порывы до {{ source.current.wind_gust }} {{ OWMUnits[source.units].speed }}</span
+          ><WindArrowDown /><i></i> порывы до {{ source.current.wind_gust }} {{ AppUnits[source.units].speed }}</span
         >
       </div>
     </template>

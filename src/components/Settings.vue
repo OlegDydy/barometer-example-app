@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { X } from 'lucide-vue-next';
 import { reactive, useTemplateRef, watchPostEffect } from 'vue';
-import { settingsStore } from '../store/settingsStore';
+import { DataSource, settingsStore } from '../store/settingsStore';
 import { clamp } from '../utils/clamp';
 
 const open = defineModel('open', { type: Boolean, default: false });
@@ -32,6 +32,7 @@ function save() {
   const store = settingsStore.value;
 
   store.apiKey = state.apiKey;
+  store.source = state.source;
   store.updatePeriod = clamp(state.updatePeriod | 0, 1, 24);
   store.location = { ...state.location };
 }
@@ -52,6 +53,14 @@ function close(e: Event) {
       <h2 style="margin-top: 1rem">Настройки</h2>
 
       <div class="entry">
+        <label for="source">Источник данных</label>
+        <select id="source" v-model="state.source">
+          <option :value="DataSource.openMeteo">Open Meteo</option>
+          <option :value="DataSource.openWeatherMap">Open Weather Map</option>
+        </select>
+      </div>
+
+      <div class="entry">
         <label for="apiKey">API ключ</label>
         <input
           id="apiKey"
@@ -60,6 +69,7 @@ function close(e: Event) {
           v-model="state.apiKey"
           size="30"
           placeholder="Вставьте свой OpenWeatherMap API ключ"
+          :disabled="state.source == DataSource.openMeteo"
         />
       </div>
 

@@ -1,8 +1,8 @@
 import { reactive, watchEffect, type Reactive } from 'vue';
 
-type WithVersion = {
+type WithVersion<T = unknown> = {
   version: number;
-  data: unknown;
+  data: T;
 };
 
 export class MigrationFailed {}
@@ -29,8 +29,8 @@ export class PersistentStore<T extends object = {}> {
     return 0;
   }
 
-  protected migrate(oldData: WithVersion): T {
-    return oldData.data as T;
+  protected migrate(_version: number, oldData: T): T {
+    return oldData;
   }
 
   private _load(defaultValue: T | (() => T)): T {
@@ -38,8 +38,8 @@ export class PersistentStore<T extends object = {}> {
     const storedJson = localStorage.getItem(this.#key);
     try {
       if (storedJson) {
-        const stored: WithVersion = JSON.parse(storedJson);
-        Object.assign(data, this.migrate(stored));
+        const stored: WithVersion<T> = JSON.parse(storedJson);
+        Object.assign(data, this.migrate(stored.version, stored.data));
       }
     } catch (e) {
       if (!(e instanceof MigrationFailed || e instanceof SyntaxError)) throw e;
@@ -49,7 +49,8 @@ export class PersistentStore<T extends object = {}> {
 
   private _store() {
     watchEffect(() => {
-      const data: WithVersion = { version: this.version(), data: this.#data };
+      const data: WithVersion<T> = { version: this.version(), data: (this.#data as unknown) as T };
+      console.log('Stored', data, this);
       localStorage.setItem(this.#key, JSON.stringify(data));
     });
   }

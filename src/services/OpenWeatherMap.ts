@@ -1,7 +1,9 @@
 import { ref, shallowRef, toValue, type MaybeRefOrGetter, type Ref, type ShallowRef } from 'vue';
-import type { OWMUnit } from '../consts/openWeatherConsts';
+import type { AppUnit } from '../consts/weatherConsts';
 import { FAKE_RESPONSE } from '../stubs/OpenWeatherMapStub';
+import type { GeoLocation } from '../types/GeoLocation';
 import type { OWMResponse } from '../types/openWeatherMap';
+import type { CurrentConitions, DailyConditions, HourlyConditions, IDataSource } from './IDataSource';
 
 export type OWMPart = 'current' | 'minutely' | 'hourly' | 'daily' | 'alerts';
 
@@ -11,23 +13,20 @@ export type OpenWeatherMapProps = {
   lang?: string | null;
 };
 
-export type OWMLocation = {
-  name: string;
-  lat: number;
-  lon: number;
-};
-
-export class OpenWeatherMap {
+export class OpenWeatherMap implements IDataSource {
   private static readonly SOURCE_URL = 'https://api.openweathermap.org/data/3.0/onecall';
 
   #apiKey: MaybeRefOrGetter<string>;
-  #location: MaybeRefOrGetter<OWMLocation>;
+  #location: MaybeRefOrGetter<GeoLocation>;
 
   #data: ShallowRef<OWMResponse | null>;
   #loading: Ref<boolean>;
   #error: Ref<string | null>;
 
-  public units: OWMUnit = 'metric';
+  public units: AppUnit = 'metric';
+
+  readonly name: string = 'Open Weather Map';
+  readonly url: string = 'https://openweathermap.org';
 
   get location() {
     return toValue(this.#location);
@@ -38,14 +37,14 @@ export class OpenWeatherMap {
   }
 
   get loaded() {
-    return this.#data.value;
+    return this.#data.value != null;
   }
 
   get error() {
     return this.#error.value;
   }
 
-  get current() {
+  get current(): CurrentConitions {
     if (!this.#data.value) throw new Error('Not loaded');
 
     const { temp, feels_like, pressure, wind_speed, wind_deg, wind_gust, uvi, weather } = this.#data.value.current!;
@@ -59,24 +58,29 @@ export class OpenWeatherMap {
       wind_gust,
       uvi,
       weather,
-      sunrise,
-      sunset,
+      sunrise: new Date(sunrise * 1000),
+      sunset: new Date(sunset * 1000),
     };
   }
 
-  get hourly() {
+  get hourly(): HourlyConditions[] {
     if (!this.#data.value) throw new Error('Not loaded');
 
-    return this.#data.value.hourly || [];
+    return (this.#data.value.hourly || []).map((item) => ({
+      time: new Date(item.dt * 1000),
+      temp: item.temp,
+      pressure: item.pressure,
+      humidity: item.humidity,
+    }));
   }
 
-  get daily() {
+  get daily(): DailyConditions[] {
     if (!this.#data.value) throw new Error('Not loaded');
 
     return this.#data.value.daily || [];
   }
 
-  constructor(apiKey: MaybeRefOrGetter<string>, location: MaybeRefOrGetter<OWMLocation>) {
+  constructor(apiKey: MaybeRefOrGetter<string>, location: MaybeRefOrGetter<GeoLocation>) {
     this.#apiKey = apiKey;
     this.#location = location;
 
