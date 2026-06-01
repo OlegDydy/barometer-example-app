@@ -89,12 +89,17 @@ export class OpenMeteo implements IDataSource {
   get hourly(): HourlyConditions[] {
     if (!this.#data.value) throw new Error('Not loaded');
 
+    const now = new Date();
+    now.setMinutes(0);
+    now.setSeconds(0);
+    now.setMilliseconds(0);
+
     return zipProps(this.#data.value.hourly).map((item) => ({
       time: new Date(item.time),
       temp: item.temperature_2m,
       humidity: item.relative_humidity_2m,
       pressure: item.surface_pressure,
-    }));
+    })).filter(i => i.time.valueOf() >= now.valueOf());
   }
 
   get daily(): DailyConditions[] {
